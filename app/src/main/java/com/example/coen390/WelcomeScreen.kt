@@ -55,7 +55,10 @@ class WelcomeScreen : ComponentActivity() {
             modifier = modifier.fillMaxSize(),
             floatingActionButton = {
                 FloatingActionButton(
-                    onClick = { /* TODO */ },
+                    onClick = {
+                        val activityLogIntent = Intent(context, ActivityLogScreen::class.java)
+                        context.startActivity(activityLogIntent)
+                    },
                     containerColor = Color(0xFF2C2C2C),
                     contentColor = Color.White,
                     shape = RoundedCornerShape(28.dp),
