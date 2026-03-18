@@ -1,10 +1,13 @@
 package com.example.coen390
 
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothManager
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -37,6 +40,16 @@ import androidx.compose.ui.unit.sp
 import com.example.coen390.ui.theme.COEN390Theme
 
 class WelcomeScreen : ComponentActivity() {
+
+    private val enableBtLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                // Bluetooth has been enabled by the user
+            } else {
+                // User denied enabling Bluetooth
+            }
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -45,6 +58,23 @@ class WelcomeScreen : ComponentActivity() {
                 Welcome()
             }
         }
+
+        // Get the Bluetooth adapter
+        val bluetoothManager: BluetoothManager = getSystemService(BluetoothManager::class.java)
+        val bluetoothAdapter: BluetoothAdapter? = bluetoothManager.adapter
+        if (bluetoothAdapter == null) {
+            // Device doesn't support Bluetooth
+        }
+
+        // TODO: Enable Bluetooth when it is actually needed instead of in
+        //  onCreate() every time the app opens
+        // Enable Bluetooth
+        if (bluetoothAdapter?.isEnabled == false) {
+            // Display a dialog requesting user permission to enable Bluetooth
+            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+            enableBtLauncher.launch(enableBtIntent)
+        }
+
     }
 
     @Composable
