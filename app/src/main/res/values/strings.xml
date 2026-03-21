@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">COEN390</string>
+    <string name="welcome_title">Welcome</string>
+    <string name="mode_title">Mode</string>
+    <string name="mode_description">One line description of mode</string>
+    <string name="list_icon_description">List</string>
+    <string name="mode_name_title">Mode Name</string>
+    <string name="mode_detailed_description">This section would give a more detailed description of the training mode. Give 3-4 line description of the mode. Describe parameters shortly.</string>
+    <string name="param_1">Param 1</string>
+    <string name="param_2">Param 2</string>
+    <string name="param_3">Param 3</string>
+    <string name="param_4">Param 4</string>
+    <string name="range_1_100">1-100</string>
+    <string name="start_activity">Start Activity</string>
+    <string name="overall_performance">Overall Performance</string>
+    <string name="min_label">Min</string>
+    <string name="mean_label">Mean</string>
+    <string name="max_label">Max</string>
+    <string name="value_zero">0</string>
+    <string name="back_icon_description">Back</string>
+    <string name="attempts_remaining">Attempts Remaining</string>
+    <string name="end_activity">End Activity</string>
+    <string name="sample_attempts_count">5</string>
+</resources>
