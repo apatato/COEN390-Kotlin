@@ -1,5 +1,6 @@
 package com.example.coen390
 
+import android.bluetooth.BluetoothSocket
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -54,24 +55,58 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.coen390.ui.theme.COEN390Theme
+import java.io.OutputStream
+import java.util.UUID
 
 class ModeScreen : ComponentActivity() {
+    companion object {
+        const val ESP32_ADDRESS = "E8:6B:EA:C9:DE:BE" // Change to yours!
+        val MY_UUID: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
+    }
+
+    // Global variables so all buttons can access them
+    private var bluetoothSocket: BluetoothSocket? = null
+    private var outputStream: OutputStream? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setupBluetoothConnection()
         enableEdgeToEdge()
         setContent {
             COEN390Theme {
                 val modeName = intent.getStringExtra("mode") ?: "Mode Name"
                 val modeDescription = intent.getStringExtra("description") ?: stringResource(id = R.string.mode_detailed_description)
-                Mode(mode = modeName, description = modeDescription)
+                Mode(mode = modeName, description = modeDescription, onStartClick = {sendData("A")})
             }
         }
     }
+    private fun setupBluetoothConnection(){
+        Thread {
+            try {
+                val bluetoothAdapter = android.bluetooth.BluetoothAdapter.getDefaultAdapter()
+                val device = bluetoothAdapter.getRemoteDevice(ESP32_ADDRESS)
+                bluetoothSocket = device.createRfcommSocketToServiceRecord(MY_UUID)
+                bluetoothSocket?.connect()
+                outputStream = bluetoothSocket?.outputStream
+            } catch(e: Exception){
+                e.printStackTrace()
+            }
+        }.start()
+    }
+
+    private fun sendData(data: String){
+        Thread{
+            try{
+                outputStream?.write(data.toByteArray())
+            }catch (e: Exception) {e.printStackTrace()}
+        }.start()
+    }
+
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Mode(modifier: Modifier = Modifier, mode: String, description: String) {
+fun Mode(modifier: Modifier = Modifier, mode: String, description: String, onStartClick: () -> Unit) {
     val context = LocalContext.current
     var showPopup by remember { mutableStateOf(false) }
     var sliderPosition by remember { mutableFloatStateOf(5f)}
@@ -82,6 +117,7 @@ fun Mode(modifier: Modifier = Modifier, mode: String, description: String) {
             onDismiss = { showPopup = false }
         )
     }
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
@@ -182,9 +218,8 @@ fun Mode(modifier: Modifier = Modifier, mode: String, description: String) {
 
             Button(
                 onClick = {
-                    showPopup = true
-                    //add bluetooth here
-                          },
+                    onStartClick()
+                    showPopup = true },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
@@ -233,6 +268,75 @@ fun Mode(modifier: Modifier = Modifier, mode: String, description: String) {
         }
     }
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ParameterControl(
+    label: String,
+    modifier: Modifier = Modifier
+) {
+    var sliderPosition by remember { mutableFloatStateOf(0f) }
+    Column(modifier = modifier.padding(vertical = 4.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Bottom
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 16.sp,
+                color = Color(0xFF1C1B1F)
+            )
+            Text(
+                text = stringResource(id = R.string.range_1_100),
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFF49454F),
+                fontSize = 14.sp
+            )
+        }
+        Box(
+            modifier = Modifier.height(32.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Slider(
+                value = sliderPosition,
+                onValueChange = { sliderPosition = it },
+                modifier = Modifier.fillMaxWidth(),
+                colors = SliderDefaults.colors(
+                    thumbColor = Color.Transparent,
+                    activeTrackColor = Color(0xFFE0E0E0),
+                    inactiveTrackColor = Color(0xFFE0E0E0)
+                ),
+                thumb = {
+                    Box(
+                        modifier = Modifier
+                            .size(16.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF2C2C2C))
+                    )
+                }
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 2.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Box(
+                    modifier = Modifier.size(12.dp).clip(CircleShape)
+                        .background(Color(0xFF2C2C2C))
+                )
+                Box(
+                    modifier = Modifier.size(12.dp).clip(CircleShape)
+                        .background(Color(0xFF2C2C2C))
+                )
+            }
+        }
+    }
+}
+
 @Composable
 fun PerformanceRow(
     label: String,
@@ -332,7 +436,7 @@ fun AttemptsPopup(
 @Composable
 fun ModePreview() {
     COEN390Theme {
-        Mode(mode = stringResource(id = R.string.mode_name_title), description = stringResource(id = R.string.mode_detailed_description))
+        Mode(mode = stringResource(id = R.string.mode_name_title), description = stringResource(id = R.string.mode_detailed_description), onStartClick = {})
     }
 }
 

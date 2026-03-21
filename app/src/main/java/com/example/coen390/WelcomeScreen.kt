@@ -1,10 +1,21 @@
 package com.example.coen390
 
+import android.Manifest
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothManager
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresPermission
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -36,7 +47,27 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.coen390.ui.theme.COEN390Theme
 
+@Suppress("DEPRECATION", "DEPRECATION")
 class WelcomeScreen : ComponentActivity() {
+    private var bluetoothAdapter: BluetoothAdapter? = null
+    private val enableBtLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                // User allowed enabling Bluetooth
+                getPairedDevices()
+            } else {
+                // User denied enabling Bluetooth
+            }
+        }
+
+    private val requestPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+            if (permissions[Manifest.permission.BLUETOOTH_CONNECT] == true) {
+                // User allowed Bluetooth permissions
+                getPairedDevices()
+            }
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -44,6 +75,90 @@ class WelcomeScreen : ComponentActivity() {
             COEN390Theme {
                 Welcome()
             }
+        }
+
+        // Get the Bluetooth adapter
+        val bluetoothManager: BluetoothManager = getSystemService(BluetoothManager::class.java)
+        bluetoothAdapter = bluetoothManager.adapter
+        if (bluetoothAdapter == null) {
+            // Device doesn't support Bluetooth
+        }
+
+        // TODO: Query paired devices when it is actually needed (e.g., button click) instead of
+        //  in onCreate() every time the app opens.
+        checkPermissionsAndProceed()
+
+        val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(receiver, filter, RECEIVER_EXPORTED)
+        } else {
+            registerReceiver(receiver, filter)
+        }
+    }
+
+    private fun checkPermissionsAndProceed() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissionLauncher.launch(
+                    arrayOf(
+                        Manifest.permission.BLUETOOTH_CONNECT,
+                        Manifest.permission.BLUETOOTH_SCAN
+                    )
+                )
+                return
+            }
+        }
+        getPairedDevices()
+    }
+
+    // Create a BroadcastReceiver for ACTION_FOUND.
+    private val receiver = object : BroadcastReceiver() {
+
+        @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
+        override fun onReceive(context: Context, intent: Intent) {
+            val action: String? = intent.action
+            when(action) {
+                BluetoothDevice.ACTION_FOUND -> {
+                    // Discovery has found a device. Get the BluetoothDevice object and
+                    // its info from the Intent.
+                    val device: BluetoothDevice?
+                    device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
+                    val deviceName = device?.name
+                    val deviceHardwareAddress = device?.address // MAC address
+                }
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // TODO: After finding a device to connect to, stop discovery with cancelDiscovery() before
+        //  attempting a connection. Also, do not perform discovery while connected to a device.
+        // ...
+        unregisterReceiver(receiver)
+    }
+
+    private fun getPairedDevices() {
+        // 1. Check Bluetooth
+        // 2. If OFF -> ask user to enable it
+        // 3. If ON -> query paired devices
+
+        if (bluetoothAdapter?.isEnabled == false) {
+            // Display a dialog requesting user permission to enable Bluetooth
+            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+            enableBtLauncher.launch(enableBtIntent)
+            return
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+            checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+            return
+        }
+
+        val pairedDevices: Set<BluetoothDevice>? = bluetoothAdapter?.bondedDevices
+        pairedDevices?.forEach { device ->
+            val deviceName = device.name
+            val deviceHardwareAccess = device.address // MAC address
         }
     }
 
