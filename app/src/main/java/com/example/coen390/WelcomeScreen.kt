@@ -111,15 +111,15 @@ class WelcomeScreen : ComponentActivity() {
                 Spacer(modifier = Modifier.height(24.dp))
 
                 ModeCard(
-                    title = stringResource(id = R.string.mode_title),
-                    description = stringResource(id = R.string.mode_description)
+                    title = "Endless",
+                    description = "Practice activity will run until you stop it"
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
 
                 ModeCard(
-                    title = stringResource(id = R.string.mode_title),
-                    description = stringResource(id = R.string.mode_description)
+                    title = "Timed",
+                    description = "Practice for a set amount of time"
                 )
             }
         }
