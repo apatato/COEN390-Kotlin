@@ -53,7 +53,7 @@ fun ActivityLog(modifier: Modifier = Modifier) {
                     val back = Intent(context, WelcomeScreen::class.java)
                     context.startActivity(back)
                 },
-                modifier = Modifier.padding(start = 8.dp, top = 4.dp)
+                modifier = Modifier.padding(start = 8.dp, top = 25.dp)
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_back),
