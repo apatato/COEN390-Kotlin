@@ -69,18 +69,19 @@ class ModeScreen : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Mode(modifier: Modifier = Modifier, mode: String, description: String) {
     val context = LocalContext.current
     var showPopup by remember { mutableStateOf(false) }
+    var sliderPosition by remember { mutableFloatStateOf(5f)}
 
     if (showPopup) {
         AttemptsPopup(
-            attempts = 5,
+            attempts = sliderPosition.toInt(),
             onDismiss = { showPopup = false }
         )
     }
-
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
@@ -89,7 +90,7 @@ fun Mode(modifier: Modifier = Modifier, mode: String, description: String) {
                     val back = Intent(context, WelcomeScreen::class.java)
                     context.startActivity(back)
                 },
-                modifier = Modifier.padding(start = 8.dp, top = 4.dp)
+                modifier = Modifier.padding(start = 8.dp, top = 25.dp)
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_back),
@@ -127,17 +128,63 @@ fun Mode(modifier: Modifier = Modifier, mode: String, description: String) {
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(36.dp))
 
-            ParameterControl(label = stringResource(id = R.string.param_1))
-            ParameterControl(label = stringResource(id = R.string.param_2))
-            ParameterControl(label = stringResource(id = R.string.param_3))
-            ParameterControl(label = stringResource(id = R.string.param_4))
+            Column(modifier = modifier.padding(vertical = 4.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    Text(
+                        text = "Number of hits: ${sliderPosition.toInt()}",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 16.sp,
+                        color = Color(0xFF1C1B1F)
+                    )
+                    Text(
+                        text = "5-100",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFF49454F),
+                        fontSize = 14.sp
+                    )
+                }
+                Spacer(modifier = Modifier.height(6.dp))
+                Box(
+                    modifier = Modifier.height(32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Slider(
+                        value = sliderPosition,
+                        valueRange = 5f..100f,
+                        steps = 95,
+                        onValueChange = { sliderPosition = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = SliderDefaults.colors(
+                            thumbColor = Color.Transparent,
+                            activeTrackColor = Color(0xFFE0E0E0),
+                            inactiveTrackColor = Color(0xFFE0E0E0)
+                        ),
+                        thumb = {
+                            Box(
+                                modifier = Modifier
+                                    .size(16.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFF2C2C2C))
+                            )
+                        }
+                    )
+                }
+            }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(36.dp))
 
             Button(
-                onClick = { showPopup = true },
+                onClick = {
+                    showPopup = true
+                    //add bluetooth here
+                          },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
@@ -186,75 +233,6 @@ fun Mode(modifier: Modifier = Modifier, mode: String, description: String) {
         }
     }
 }
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ParameterControl(
-    label: String,
-    modifier: Modifier = Modifier
-) {
-    var sliderPosition by remember { mutableFloatStateOf(0f) }
-    Column(modifier = modifier.padding(vertical = 4.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Bottom
-        ) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 16.sp,
-                color = Color(0xFF1C1B1F)
-            )
-            Text(
-                text = stringResource(id = R.string.range_1_100),
-                style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF49454F),
-                fontSize = 14.sp
-            )
-        }
-        Box(
-            modifier = Modifier.height(32.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Slider(
-                value = sliderPosition,
-                onValueChange = { sliderPosition = it },
-                modifier = Modifier.fillMaxWidth(),
-                colors = SliderDefaults.colors(
-                    thumbColor = Color.Transparent,
-                    activeTrackColor = Color(0xFFE0E0E0),
-                    inactiveTrackColor = Color(0xFFE0E0E0)
-                ),
-                thumb = {
-                    Box(
-                        modifier = Modifier
-                            .size(16.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFF2C2C2C))
-                    )
-                }
-            )
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 2.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Box(
-                    modifier = Modifier.size(12.dp).clip(CircleShape)
-                        .background(Color(0xFF2C2C2C))
-                )
-                Box(
-                    modifier = Modifier.size(12.dp).clip(CircleShape)
-                        .background(Color(0xFF2C2C2C))
-                )
-            }
-        }
-    }
-}
-
 @Composable
 fun PerformanceRow(
     label: String,
