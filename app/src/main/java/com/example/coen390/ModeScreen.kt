@@ -37,7 +37,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -60,27 +59,86 @@ import java.util.UUID
 
 class ModeScreen : ComponentActivity() {
     companion object {
-        const val ESP32_ADDRESS = "E8:6B:EA:C9:DE:BE" // Change to yours!
+        const val ESP32_ADDRESS = "E8:6B:EA:C9:DE:BE"
         val MY_UUID: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
     }
 
-    // Global variables so all buttons can access them
     private var bluetoothSocket: BluetoothSocket? = null
     private var outputStream: OutputStream? = null
 
+    var minVal = mutableStateOf("0 ms")
+    var maxVal = mutableStateOf("0 ms")
+    var meanVal = mutableStateOf("0 ms")
+    var remainingAttempts = mutableStateOf(0)
+
+    // The listener must be called inside the connection setup
+    private fun listenForData() {
+        Thread{
+            try {
+                val reader = bluetoothSocket?.inputStream?.bufferedReader()
+                while (isConnected()) {
+                    val line = reader?.readLine() ?: ""
+
+                    //Handle Countdown update
+                    if (line.startsWith("<RT")) {
+                        runOnUiThread {
+                            if (remainingAttempts.value > 0){
+                                remainingAttempts.value -= 1
+                                // Log it to logcat
+                                android.util.Log.d("BT_DEBUG", "Count decreased to: ${remainingAttempts.value}")
+                            }
+                        }
+                    }
+                    if (line.startsWith("<SUM")) {
+                        val parts = line.replace("<", "").replace(">", "").split(",")
+                        if (parts.size >= 4) {
+                            runOnUiThread {
+                                if (remainingAttempts.value < 1) {
+                                    minVal.value = "${parts[1]} ms"
+                                    maxVal.value = "${parts[2]} ms"
+                                    meanVal.value = "${parts[3]} ms"
+
+                                    remainingAttempts.value = 0
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }.start()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setupBluetoothConnection()
+        setupBluetoothConnection() // This will now start the listener too
         enableEdgeToEdge()
         setContent {
             COEN390Theme {
                 val modeName = intent.getStringExtra("mode") ?: "Mode Name"
-                val modeDescription = intent.getStringExtra("description") ?: stringResource(id = R.string.mode_detailed_description)
-                Mode(mode = modeName, description = modeDescription, onStartClick = {sendData("A")})
+                val modeDescription = intent.getStringExtra("description") ?: "Activity"
+
+                // We pass the .value here so Compose knows to track it
+                Mode(
+                    mode = modeName,
+                    description = modeDescription,
+                    min = minVal.value,
+                    max = maxVal.value,
+                    mean = meanVal.value,
+                    remaining = remainingAttempts.value,
+                    onStartClick = {data ->
+                        remainingAttempts.value = data.filter { it.isDigit() }.toIntOrNull() ?:0
+                        sendData(data)
+                    },
+                    onStopClick = {
+                        data -> sendData(data) }
+                )
             }
         }
     }
-    private fun setupBluetoothConnection(){
+
+    private fun setupBluetoothConnection() {
         Thread {
             try {
                 val bluetoothAdapter = android.bluetooth.BluetoothAdapter.getDefaultAdapter()
@@ -88,32 +146,77 @@ class ModeScreen : ComponentActivity() {
                 bluetoothSocket = device.createRfcommSocketToServiceRecord(MY_UUID)
                 bluetoothSocket?.connect()
                 outputStream = bluetoothSocket?.outputStream
-            } catch(e: Exception){
+
+                // Start listening for data ONLY after connection is successful
+                listenForData()
+
+            } catch (e: Exception) {
                 e.printStackTrace()
             }
         }.start()
     }
 
-    private fun sendData(data: String){
-        Thread{
-            try{
+    private fun isConnected(): Boolean = bluetoothSocket?.isConnected == true
+
+    private fun sendData(data: String) {
+        Thread {
+            try {
+                if (outputStream == null || !isConnected()) {
+                    setupBluetoothConnectionSync()
+                }
                 outputStream?.write(data.toByteArray())
-            }catch (e: Exception) {e.printStackTrace()}
+            } catch (e: Exception) {
+                e.printStackTrace()
+                outputStream = null
+                bluetoothSocket = null
+            }
         }.start()
     }
 
+    private fun setupBluetoothConnectionSync() {
+        try {
+            val bluetoothAdapter = android.bluetooth.BluetoothAdapter.getDefaultAdapter()
+            val device = bluetoothAdapter.getRemoteDevice(ESP32_ADDRESS)
+            bluetoothSocket?.close()
+            bluetoothSocket = device.createRfcommSocketToServiceRecord(MY_UUID)
+            bluetoothSocket?.connect()
+            outputStream = bluetoothSocket?.outputStream
+            listenForData() // Restart listener on new socket
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
 }
 
 @Composable
-fun Mode(modifier: Modifier = Modifier, mode: String, description: String, onStartClick: () -> Unit) {
+fun Mode(
+    modifier: Modifier = Modifier
+    , mode: String
+    , description: String
+    , min: String
+    , max: String
+    , mean: String
+    , remaining: Int
+    , onStartClick: (String) -> Unit
+    , onStopClick: (String) -> Unit
+) {
+    var param1Value by remember { mutableStateOf(1f) }
     val context = LocalContext.current
     var showPopup by remember { mutableStateOf(false) }
 
     if (showPopup) {
         AttemptsPopup(
-            attempts = 5,
-            onDismiss = { showPopup = false }
+            attempts = remaining,
+            onDismiss = { showPopup = false },
+            onStopClick = {
+                onStartClick("S") //ESP32 will stop
+                showPopup = false
+            }
         )
+
+        if (remaining == 0){
+            showPopup = false
+        }
     }
 
     Scaffold(
@@ -164,17 +267,22 @@ fun Mode(modifier: Modifier = Modifier, mode: String, description: String, onSta
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            ParameterControl(label = stringResource(id = R.string.param_1))
-            ParameterControl(label = stringResource(id = R.string.param_2))
-            ParameterControl(label = stringResource(id = R.string.param_3))
-            ParameterControl(label = stringResource(id = R.string.param_4))
+            ParameterControl(
+                label = stringResource(id = R.string.param_1),
+                value = param1Value,
+                onValueChange = { param1Value = it }
+            )
+            //ParameterControl(label = stringResource(id = R.string.param_2))
+            //ParameterControl(label = stringResource(id = R.string.param_3))
+            //ParameterControl(label = stringResource(id = R.string.param_4))
 
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
                 onClick = {
-                    onStartClick()
-                    showPopup = true },
+                    onStartClick("A${param1Value.toInt()}")
+                    showPopup = true
+                          },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
@@ -206,17 +314,17 @@ fun Mode(modifier: Modifier = Modifier, mode: String, description: String, onSta
 
             PerformanceRow(
                 label = stringResource(id = R.string.min_label),
-                value = stringResource(id = R.string.value_zero)
+                value = min
             )
             Spacer(modifier = Modifier.height(8.dp))
             PerformanceRow(
                 label = stringResource(id = R.string.mean_label),
-                value = stringResource(id = R.string.value_zero)
+                value = mean
             )
             Spacer(modifier = Modifier.height(8.dp))
             PerformanceRow(
                 label = stringResource(id = R.string.max_label),
-                value = stringResource(id = R.string.value_zero)
+                value = max
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -228,9 +336,10 @@ fun Mode(modifier: Modifier = Modifier, mode: String, description: String, onSta
 @Composable
 fun ParameterControl(
     label: String,
+    value: Float,
+    onValueChange: (Float) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var sliderPosition by remember { mutableFloatStateOf(0f) }
     Column(modifier = modifier.padding(vertical = 4.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -245,8 +354,9 @@ fun ParameterControl(
                 color = Color(0xFF1C1B1F)
             )
             Text(
-                text = stringResource(id = R.string.range_1_100),
+                text = "Target: ${value.toInt()}",
                 style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Bold,
                 color = Color(0xFF49454F),
                 fontSize = 14.sp
             )
@@ -256,8 +366,9 @@ fun ParameterControl(
             contentAlignment = Alignment.Center
         ) {
             Slider(
-                value = sliderPosition,
-                onValueChange = { sliderPosition = it },
+                value = value,
+                onValueChange = onValueChange,
+                valueRange = 1f..100f,
                 modifier = Modifier.fillMaxWidth(),
                 colors = SliderDefaults.colors(
                     thumbColor = Color.Transparent,
@@ -280,11 +391,15 @@ fun ParameterControl(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Box(
-                    modifier = Modifier.size(12.dp).clip(CircleShape)
+                    modifier = Modifier
+                        .size(12.dp)
+                        .clip(CircleShape)
                         .background(Color(0xFF2C2C2C))
                 )
                 Box(
-                    modifier = Modifier.size(12.dp).clip(CircleShape)
+                    modifier = Modifier
+                        .size(12.dp)
+                        .clip(CircleShape)
                         .background(Color(0xFF2C2C2C))
                 )
             }
@@ -333,6 +448,7 @@ fun PerformanceRow(
 fun AttemptsPopup(
     attempts: Int,
     onDismiss: () -> Unit,
+    onStopClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Dialog(onDismissRequest = onDismiss) {
@@ -366,7 +482,8 @@ fun AttemptsPopup(
                 )
                 Spacer(modifier = Modifier.height(48.dp))
                 Button(
-                    onClick = onDismiss,
+                    onClick = { onStopClick() //send stop signal
+                              },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
@@ -391,7 +508,16 @@ fun AttemptsPopup(
 @Composable
 fun ModePreview() {
     COEN390Theme {
-        Mode(mode = stringResource(id = R.string.mode_name_title), description = stringResource(id = R.string.mode_detailed_description), onStartClick = {})
+        Mode(
+            mode = stringResource(id = R.string.mode_name_title),
+            description = stringResource(id = R.string.mode_detailed_description),
+            min = "0",
+            max = "0",
+            mean = "0",
+            remaining = 5,
+            onStartClick = {},
+            onStopClick = {}
+        )
     }
 }
 
@@ -399,6 +525,6 @@ fun ModePreview() {
 @Composable
 fun AttemptsPopupPreview() {
     COEN390Theme {
-        AttemptsPopup(attempts = 5, onDismiss = {})
+        AttemptsPopup(attempts = 5, onDismiss = {}, onStopClick = {})
     }
 }
