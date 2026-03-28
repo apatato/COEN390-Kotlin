@@ -1,21 +1,16 @@
 package com.example.coen390
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -25,7 +20,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -34,39 +28,45 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.coen390.ui.theme.COEN390Theme
 
-data class SessionItem(
-    val mode: String,
-    val date: String,
-    val minTime: String,
-    val meanTime: String,
-    val maxTime: String,
-    val totalHits: String
-)
-
-class ActivityLogScreen : ComponentActivity() {
+class SessionDetailsScreen : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        val mode = intent.getStringExtra("mode") ?: "Unknown Mode"
+        val date = intent.getStringExtra("date") ?: "Unknown Date"
+        val minTime = intent.getStringExtra("minTime") ?: "0 ms"
+        val meanTime = intent.getStringExtra("meanTime") ?: "0 ms"
+        val maxTime = intent.getStringExtra("maxTime") ?: "0 ms"
+        val totalHits = intent.getStringExtra("totalHits") ?: "0"
+
         setContent {
             COEN390Theme {
-                ActivityLog()
+                SessionDetails(
+                    mode = mode,
+                    date = date,
+                    minTime = minTime,
+                    meanTime = meanTime,
+                    maxTime = maxTime,
+                    totalHits = totalHits
+                )
             }
         }
     }
 }
 
 @Composable
-fun ActivityLog(modifier: Modifier = Modifier) {
+fun SessionDetails(
+    mode: String,
+    date: String,
+    minTime: String,
+    meanTime: String,
+    maxTime: String,
+    totalHits: String
+) {
     val context = LocalContext.current
 
-    val sessions = listOf(
-        SessionItem("Random Mode", "Mar 23, 11:30 PM", "210 ms", "260 ms", "320 ms", "6"),
-        SessionItem("Timed Mode", "Mar 23, 10:05 PM", "190 ms", "240 ms", "300 ms", "8"),
-        SessionItem("Endless Mode", "Mar 22, 8:15 PM", "220 ms", "275 ms", "340 ms", "10")
-    )
-
     Scaffold(
-        modifier = modifier.fillMaxSize(),
         topBar = {
             IconButton(
                 onClick = { (context as? ComponentActivity)?.finish() },
@@ -85,13 +85,12 @@ fun ActivityLog(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(24.dp)
         ) {
             Spacer(modifier = Modifier.height(40.dp))
 
             Text(
-                text = "Activity Log",
+                text = "Session Details",
                 style = MaterialTheme.typography.headlineMedium,
                 color = Color.Black,
                 fontSize = 26.sp
@@ -99,55 +98,37 @@ fun ActivityLog(modifier: Modifier = Modifier) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(sessions) { session ->
-                    SessionCard(
-                        session = session,
-                        onClick = {
-                            val intent = Intent(context, SessionDetailsScreen::class.java).apply {
-                                putExtra("mode", session.mode)
-                                putExtra("date", session.date)
-                                putExtra("minTime", session.minTime)
-                                putExtra("meanTime", session.meanTime)
-                                putExtra("maxTime", session.maxTime)
-                                putExtra("totalHits", session.totalHits)
-                            }
-                            context.startActivity(intent)
-                        }
-                    )
-                }
-            }
+            DetailCard("Mode", mode)
+            DetailCard("Date", date)
+            DetailCard("Min Reaction Time", minTime)
+            DetailCard("Mean Reaction Time", meanTime)
+            DetailCard("Max Reaction Time", maxTime)
+            DetailCard("Total Hits", totalHits)
         }
     }
 }
 
 @Composable
-fun SessionCard(
-    session: SessionItem,
-    onClick: () -> Unit
-) {
+fun DetailCard(label: String, value: String) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() },
+            .padding(bottom = 12.dp),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         border = BorderStroke(1.dp, Color(0xFFEAEAEA))
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = session.mode,
-                style = MaterialTheme.typography.titleMedium,
-                color = Color.Black
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.Gray
             )
             Spacer(modifier = Modifier.height(6.dp))
             Text(
-                text = session.date,
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.Gray
+                text = value,
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.Black
             )
         }
     }

@@ -18,6 +18,9 @@
             android:theme="@style/Theme.COEN390" />
 
         <activity
+            android:name=".SessionDetailsScreen" />
+
+        <activity
             android:name=".ModeScreen"
             android:exported="false"
             android:label="COEN390"
