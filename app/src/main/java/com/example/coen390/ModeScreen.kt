@@ -1,5 +1,6 @@
 package com.example.coen390
 
+import android.bluetooth.BluetoothSocket
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -54,34 +55,173 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.coen390.ui.theme.COEN390Theme
+import java.io.OutputStream
+import java.util.UUID
 
 class ModeScreen : ComponentActivity() {
+    companion object {
+        const val ESP32_ADDRESS = "E8:6B:EA:C9:DE:BE"
+        val MY_UUID: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
+    }
+
+    private var bluetoothSocket: BluetoothSocket? = null
+    private var outputStream: OutputStream? = null
+
+    var minVal = mutableStateOf("0 ms")
+    var maxVal = mutableStateOf("0 ms")
+    var meanVal = mutableStateOf("0 ms")
+    var remainingAttempts = mutableStateOf(0)
+
+    // The listener must be called inside the connection setup
+    private fun listenForData() {
+        Thread{
+            try {
+                val reader = bluetoothSocket?.inputStream?.bufferedReader()
+                while (isConnected()) {
+                    val line = reader?.readLine() ?: ""
+
+                    //Handle Countdown update
+                    if (line.startsWith("<RT")) {
+                        runOnUiThread {
+                            if (remainingAttempts.value > 0){
+                                remainingAttempts.value -= 1
+                                // Log it to logcat
+                                android.util.Log.d("BT_DEBUG", "Count decreased to: ${remainingAttempts.value}")
+                            }
+                        }
+                    }
+                    if (line.startsWith("<SUM")) {
+                        val parts = line.replace("<", "").replace(">", "").split(",")
+                        if (parts.size >= 4) {
+                            runOnUiThread {
+                                if (remainingAttempts.value < 1) {
+                                    minVal.value = "${parts[1]} ms"
+                                    maxVal.value = "${parts[2]} ms"
+                                    meanVal.value = "${parts[3]} ms"
+
+                                    remainingAttempts.value = 0
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }.start()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setupBluetoothConnection() // This will now start the listener too
         enableEdgeToEdge()
         setContent {
             COEN390Theme {
                 val modeName = intent.getStringExtra("mode") ?: "Mode Name"
-                val modeDescription = intent.getStringExtra("description") ?: stringResource(id = R.string.mode_detailed_description)
-                Mode(mode = modeName, description = modeDescription)
+                val modeDescription = intent.getStringExtra("description") ?: "Activity"
+
+                // We pass the .value here so Compose knows to track it
+                Mode(
+                    mode = modeName,
+                    description = modeDescription,
+                    min = minVal.value,
+                    max = maxVal.value,
+                    mean = meanVal.value,
+                    remaining = remainingAttempts.value,
+                    onStartClick = {data ->
+                        remainingAttempts.value = data.filter { it.isDigit() }.toIntOrNull() ?:0
+                        sendData(data)
+                    },
+                    onStopClick = {
+                        data -> sendData(data) }
+                )
             }
+        }
+    }
+
+    private fun setupBluetoothConnection() {
+        Thread {
+            try {
+                val bluetoothAdapter = android.bluetooth.BluetoothAdapter.getDefaultAdapter()
+                val device = bluetoothAdapter.getRemoteDevice(ESP32_ADDRESS)
+                bluetoothSocket = device.createRfcommSocketToServiceRecord(MY_UUID)
+                bluetoothSocket?.connect()
+                outputStream = bluetoothSocket?.outputStream
+
+                // Start listening for data ONLY after connection is successful
+                listenForData()
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }.start()
+    }
+
+    private fun isConnected(): Boolean = bluetoothSocket?.isConnected == true
+
+    private fun sendData(data: String) {
+        Thread {
+            try {
+                if (outputStream == null || !isConnected()) {
+                    setupBluetoothConnectionSync()
+                }
+                outputStream?.write(data.toByteArray())
+            } catch (e: Exception) {
+                e.printStackTrace()
+                outputStream = null
+                bluetoothSocket = null
+            }
+        }.start()
+    }
+
+    private fun setupBluetoothConnectionSync() {
+        try {
+            val bluetoothAdapter = android.bluetooth.BluetoothAdapter.getDefaultAdapter()
+            val device = bluetoothAdapter.getRemoteDevice(ESP32_ADDRESS)
+            bluetoothSocket?.close()
+            bluetoothSocket = device.createRfcommSocketToServiceRecord(MY_UUID)
+            bluetoothSocket?.connect()
+            outputStream = bluetoothSocket?.outputStream
+            listenForData() // Restart listener on new socket
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Mode(modifier: Modifier = Modifier, mode: String, description: String) {
+fun Mode(
+    modifier: Modifier = Modifier
+    , mode: String
+    , description: String
+    , min: String
+    , max: String
+    , mean: String
+    , remaining: Int
+    , onStartClick: (String) -> Unit
+    , onStopClick: (String) -> Unit
+) {
+
     val context = LocalContext.current
     var showPopup by remember { mutableStateOf(false) }
     var sliderPosition by remember { mutableFloatStateOf(5f)}
 
     if (showPopup) {
         AttemptsPopup(
-            attempts = sliderPosition.toInt(),
-            onDismiss = { showPopup = false }
+            attempts = remaining,
+            onDismiss = { showPopup = false },
+            onStopClick = {
+                onStartClick("S") //ESP32 will stop
+                showPopup = false
+            }
         )
+
+        if (remaining == 0){
+            showPopup = false
+        }
     }
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
@@ -182,8 +322,8 @@ fun Mode(modifier: Modifier = Modifier, mode: String, description: String) {
 
             Button(
                 onClick = {
+                    onStartClick("A${sliderPosition.toInt()}")
                     showPopup = true
-                    //add bluetooth here
                           },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -216,23 +356,24 @@ fun Mode(modifier: Modifier = Modifier, mode: String, description: String) {
 
             PerformanceRow(
                 label = stringResource(id = R.string.min_label),
-                value = stringResource(id = R.string.value_zero)
+                value = min
             )
             Spacer(modifier = Modifier.height(8.dp))
             PerformanceRow(
                 label = stringResource(id = R.string.mean_label),
-                value = stringResource(id = R.string.value_zero)
+                value = mean
             )
             Spacer(modifier = Modifier.height(8.dp))
             PerformanceRow(
                 label = stringResource(id = R.string.max_label),
-                value = stringResource(id = R.string.value_zero)
+                value = max
             )
 
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
+
 @Composable
 fun PerformanceRow(
     label: String,
@@ -274,6 +415,7 @@ fun PerformanceRow(
 fun AttemptsPopup(
     attempts: Int,
     onDismiss: () -> Unit,
+    onStopClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Dialog(onDismissRequest = onDismiss) {
@@ -307,7 +449,8 @@ fun AttemptsPopup(
                 )
                 Spacer(modifier = Modifier.height(48.dp))
                 Button(
-                    onClick = onDismiss,
+                    onClick = { onStopClick() //send stop signal
+                              },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
@@ -332,7 +475,16 @@ fun AttemptsPopup(
 @Composable
 fun ModePreview() {
     COEN390Theme {
-        Mode(mode = stringResource(id = R.string.mode_name_title), description = stringResource(id = R.string.mode_detailed_description))
+        Mode(
+            mode = stringResource(id = R.string.mode_name_title),
+            description = stringResource(id = R.string.mode_detailed_description),
+            min = "0",
+            max = "0",
+            mean = "0",
+            remaining = 5,
+            onStartClick = {},
+            onStopClick = {}
+        )
     }
 }
 
@@ -340,6 +492,6 @@ fun ModePreview() {
 @Composable
 fun AttemptsPopupPreview() {
     COEN390Theme {
-        AttemptsPopup(attempts = 5, onDismiss = {})
+        AttemptsPopup(attempts = 5, onDismiss = {}, onStopClick = {})
     }
 }
