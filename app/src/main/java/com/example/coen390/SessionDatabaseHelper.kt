@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper
 
 class SessionDatabaseHelper(context: Context): SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
     override fun onCreate(db: SQLiteDatabase?) {
-        val createTable = "CREATE TABLE $TABLE_NAME ($COLUMN_ID INTEGER PRIMARY KEY, $COLUMN_MIN_TIME FLOAT, $COLUMN_MAX_TIME FLOAT, $COLUMN_MEAN_TIME FLOAT, $COLUMN_MIN_FORCE FLOAT, $COLUMN_MAX_FORCE FLOAT, $COLUMN_MEAN_FORCE FLOAT)"
+        val createTable = "CREATE TABLE $TABLE_NAME ($COLUMN_ID INTEGER PRIMARY KEY, $COLUMN_MIN_TIME TEXT, $COLUMN_MAX_TIME TEXT, $COLUMN_MEAN_TIME TEXT, $COLUMN_MIN_FORCE TEXT, $COLUMN_MAX_FORCE TEXT, $COLUMN_MEAN_FORCE TEXT)"
         db?.execSQL(createTable)
     }
 

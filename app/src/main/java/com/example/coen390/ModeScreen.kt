@@ -64,16 +64,21 @@ class ModeScreen : ComponentActivity() {
         val MY_UUID: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
     }
 
+    private lateinit var db : SessionDatabaseHelper
     private var bluetoothSocket: BluetoothSocket? = null
     private var outputStream: OutputStream? = null
 
-    var minVal = mutableStateOf("0 ms")
-    var maxVal = mutableStateOf("0 ms")
-    var meanVal = mutableStateOf("0 ms")
+    var minVal_Time = mutableStateOf("0 ms")
+    var maxVal_Time = mutableStateOf("0 ms")
+    var meanVal_Time = mutableStateOf("0 ms")
+    var minVal_Force = mutableStateOf("0 N")
+    var maxVal_Force = mutableStateOf("0 N")
+    var meanVal_Force = mutableStateOf("0 N")
     var remainingAttempts = mutableStateOf(0)
 
     // The listener must be called inside the connection setup
     private fun listenForData() {
+        db = SessionDatabaseHelper(this)
         Thread{
             try {
                 val reader = bluetoothSocket?.inputStream?.bufferedReader()
@@ -95,9 +100,15 @@ class ModeScreen : ComponentActivity() {
                         if (parts.size >= 4) {
                             runOnUiThread {
                                 if (remainingAttempts.value < 1) {
-                                    minVal.value = "${parts[1]} ms"
-                                    maxVal.value = "${parts[2]} ms"
-                                    meanVal.value = "${parts[3]} ms"
+                                    minVal_Time.value = "${parts[1]} ms"
+                                    maxVal_Time.value = "${parts[2]} ms"
+                                    meanVal_Time.value = "${parts[3]} ms"
+                                    //put into database
+                                    val minHit = Hit(minVal_Time.value, minVal_Force.value)
+                                    val maxHit = Hit(maxVal_Time.value, maxVal_Force.value)
+                                    val meanHit = Hit(meanVal_Time.value, meanVal_Force.value)
+                                    val session = Session(0, minHit, maxHit, meanHit)
+                                    db.insertSession(session)
 
                                     remainingAttempts.value = 0
                                 }
@@ -124,9 +135,9 @@ class ModeScreen : ComponentActivity() {
                 Mode(
                     mode = modeName,
                     description = modeDescription,
-                    min = minVal.value,
-                    max = maxVal.value,
-                    mean = meanVal.value,
+                    min = minVal_Time.value,
+                    max = maxVal_Time.value,
+                    mean = meanVal_Time.value,
                     remaining = remainingAttempts.value,
                     onStartClick = {data ->
                         remainingAttempts.value = data.filter { it.isDigit() }.toIntOrNull() ?:0
