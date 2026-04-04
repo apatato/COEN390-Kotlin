@@ -1,3 +1,3 @@
 package com.example.coen390
 
-data class Hit(val time: Float, val force: Float)
+data class Hit(val time: String, val force: String)

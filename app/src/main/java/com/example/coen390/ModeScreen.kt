@@ -67,14 +67,9 @@ class ModeScreen : ComponentActivity() {
     private var bluetoothSocket: BluetoothSocket? = null
     private var outputStream: OutputStream? = null
 
-    var RTminVal = mutableStateOf("0 ms")
-    var RTmaxVal = mutableStateOf("0 ms")
-    var RTmeanVal = mutableStateOf("0 ms")
-    var ForcemeanVal = mutableStateOf("0 N")
-    var ForcemaxVal = mutableStateOf("0 N")
-    var ForceminVal = mutableStateOf("0 N")
-
-
+    var minVal = mutableStateOf("0 ms")
+    var maxVal = mutableStateOf("0 ms")
+    var meanVal = mutableStateOf("0 ms")
     var remainingAttempts = mutableStateOf(0)
 
     // The listener must be called inside the connection setup
@@ -100,12 +95,9 @@ class ModeScreen : ComponentActivity() {
                         if (parts.size >= 4) {
                             runOnUiThread {
                                 if (remainingAttempts.value < 1) {
-                                    RTminVal.value = "${parts[1]} ms"
-                                    RTmaxVal.value = "${parts[2]} ms"
-                                    RTmeanVal.value = "${parts[3]} ms"
-                                    ForcemeanVal.value = "${parts[4]} N"
-                                    ForcemaxVal.value = "${parts[5]} N"
-                                    ForceminVal.value = "${parts[6]} N"
+                                    minVal.value = "${parts[1]} ms"
+                                    maxVal.value = "${parts[2]} ms"
+                                    meanVal.value = "${parts[3]} ms"
 
                                     remainingAttempts.value = 0
                                 }
@@ -132,9 +124,9 @@ class ModeScreen : ComponentActivity() {
                 Mode(
                     mode = modeName,
                     description = modeDescription,
-                    min = RTminVal.value +", " + ForceminVal.value,
-                    max = RTmaxVal.value + ", " + ForcemaxVal.value,
-                    mean = RTmeanVal.value + ", " + ForcemeanVal.value,
+                    min = minVal.value,
+                    max = maxVal.value,
+                    mean = meanVal.value,
                     remaining = remainingAttempts.value,
                     onStartClick = {data ->
                         remainingAttempts.value = data.filter { it.isDigit() }.toIntOrNull() ?:0
@@ -486,9 +478,9 @@ fun ModePreview() {
         Mode(
             mode = stringResource(id = R.string.mode_name_title),
             description = stringResource(id = R.string.mode_detailed_description),
-            min = "0ms, 0N",
-            max = "0ms, 0N",
-            mean = "0ms, 0N",
+            min = "0",
+            max = "0",
+            mean = "0",
             remaining = 5,
             onStartClick = {},
             onStopClick = {}
