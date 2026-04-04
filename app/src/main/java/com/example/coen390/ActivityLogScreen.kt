@@ -74,7 +74,7 @@ fun ActivityLog(modifier: Modifier = Modifier) {
         topBar = {
             IconButton(
                 onClick = { (context as? ComponentActivity)?.finish() },
-                modifier = Modifier.padding(start = 8.dp, top = 25.dp)
+                modifier = Modifier.padding(start = 8.dp, top = 50.dp)
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_back),

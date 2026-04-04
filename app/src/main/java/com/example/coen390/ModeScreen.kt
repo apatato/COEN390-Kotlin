@@ -241,7 +241,7 @@ fun Mode(
                     val back = Intent(context, WelcomeScreen::class.java)
                     context.startActivity(back)
                 },
-                modifier = Modifier.padding(start = 8.dp, top = 25.dp)
+                modifier = Modifier.padding(start = 8.dp, top = 50.dp)
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_back),
