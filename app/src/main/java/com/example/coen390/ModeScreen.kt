@@ -2,10 +2,12 @@ package com.example.coen390
 
 import android.bluetooth.BluetoothSocket
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -56,6 +58,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.coen390.ui.theme.COEN390Theme
 import java.io.OutputStream
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 class ModeScreen : ComponentActivity() {
@@ -64,6 +68,7 @@ class ModeScreen : ComponentActivity() {
         val MY_UUID: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
     }
 
+    private lateinit var db : SessionDatabaseHelper
     private var bluetoothSocket: BluetoothSocket? = null
     private var outputStream: OutputStream? = null
 
@@ -74,8 +79,13 @@ class ModeScreen : ComponentActivity() {
     var ForcemaxVal = mutableStateOf("0 N")
     var ForceminVal = mutableStateOf("0 N")
     var remainingAttempts = mutableStateOf(0)
+    var mode = mutableStateOf("")
+    var date = mutableStateOf("")
+    var totalHits = mutableStateOf(0)
+
 
     // The listener must be called inside the connection setup
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun listenForData() {
         Thread{
             try {
@@ -105,6 +115,18 @@ class ModeScreen : ComponentActivity() {
                                     ForcemaxVal.value = "${parts[5]} N"
                                     ForceminVal.value = "${parts[6]} N"
 
+                                    var now = LocalDateTime.now()
+                                    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                                    date.value = now.format(formatter)
+
+                                    db = SessionDatabaseHelper(this)
+
+                                    val minHit = Hit(RTminVal.value, ForceminVal.value)
+                                    val maxHit = Hit(RTmaxVal.value, ForcemaxVal.value)
+                                    val meanHit = Hit(RTmeanVal.value, ForcemeanVal.value)
+                                    val session = Session(minHit, maxHit, meanHit, mode.value, date.value, totalHits.value)
+                                    db.insertSession(session)
+
                                     remainingAttempts.value = 0
                                 }
                             }
@@ -124,6 +146,7 @@ class ModeScreen : ComponentActivity() {
         setContent {
             COEN390Theme {
                 val modeName = intent.getStringExtra("mode") ?: "Mode Name"
+                mode.value = modeName
                 val modeDescription = intent.getStringExtra("description") ?: "Activity"
 
                 // We pass the .value here so Compose knows to track it
@@ -136,6 +159,7 @@ class ModeScreen : ComponentActivity() {
                     remaining = remainingAttempts.value,
                     onStartClick = {data ->
                         remainingAttempts.value = data.filter { it.isDigit() }.toIntOrNull() ?:0
+                        totalHits.value = remainingAttempts.value
                         sendData(data)
                     },
                     onStopClick = {
