@@ -26,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,15 +38,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.coen390.ui.theme.COEN390Theme
-
-data class SessionItem(
-    val mode: String,
-    val date: String,
-    val minTime: String,
-    val meanTime: String,
-    val maxTime: String,
-    val totalHits: String
-)
 
 class ActivityLogScreen : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,12 +54,8 @@ class ActivityLogScreen : ComponentActivity() {
 @Composable
 fun ActivityLog(modifier: Modifier = Modifier) {
     val context = LocalContext.current
-
-    val sessions = listOf(
-        SessionItem("Random Mode", "Mar 23, 11:30 PM", "210 ms", "260 ms", "320 ms", "6"),
-        SessionItem("Timed Mode", "Mar 23, 10:05 PM", "190 ms", "240 ms", "300 ms", "8"),
-        SessionItem("Endless Mode", "Mar 22, 8:15 PM", "220 ms", "275 ms", "340 ms", "10")
-    )
+    val dbHelper = remember { SessionDatabaseHelper(context) }
+    val sessions = remember { dbHelper.getAllSessions() }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -104,25 +92,36 @@ fun ActivityLog(modifier: Modifier = Modifier) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(sessions) { session ->
-                    SessionCard(
-                        session = session,
-                        onClick = {
-                            val intent = Intent(context, SessionDetailsScreen::class.java).apply {
-                                putExtra("mode", session.mode)
-                                putExtra("date", session.date)
-                                putExtra("minTime", session.minTime)
-                                putExtra("meanTime", session.meanTime)
-                                putExtra("maxTime", session.maxTime)
-                                putExtra("totalHits", session.totalHits)
+            if (sessions.isEmpty()) {
+                Text(
+                    text = "No activity history yet.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Color.Gray
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(sessions) { session ->
+                        SessionCard(
+                            session = session,
+                            onClick = {
+                                val intent = Intent(context, SessionDetailsScreen::class.java).apply {
+                                    putExtra("mode", session.mode)
+                                    putExtra("date", session.date)
+                                    putExtra("minTime", session.min_hit.time)
+                                    putExtra("meanTime", session.mean_hit.time)
+                                    putExtra("maxTime", session.max_hit.time)
+                                    putExtra("totalHits", session.total_hits.toString())
+                                    putExtra("minForce", session.min_hit.force)
+                                    putExtra("meanForce", session.mean_hit.force)
+                                    putExtra("maxForce", session.max_hit.force)
+                                }
+                                context.startActivity(intent)
                             }
-                            context.startActivity(intent)
-                        }
-                    )
+                        )
+                    }
                 }
             }
         }
@@ -131,7 +130,7 @@ fun ActivityLog(modifier: Modifier = Modifier) {
 
 @Composable
 fun SessionCard(
-    session: SessionItem,
+    session: Session,
     onClick: () -> Unit
 ) {
     Card(
@@ -146,7 +145,8 @@ fun SessionCard(
             Text(
                 text = session.mode,
                 style = MaterialTheme.typography.titleMedium,
-                color = Color.Black
+                color = Color.Black,
+                fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(6.dp))
             Text(
@@ -154,6 +154,20 @@ fun SessionCard(
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.Gray
             )
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = "Total Hits: ${session.total_hits}",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFF555555)
+            )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ActivityLogPreview() {
+    COEN390Theme {
+        ActivityLog()
     }
 }

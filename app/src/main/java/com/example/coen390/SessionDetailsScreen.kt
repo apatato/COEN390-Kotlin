@@ -35,10 +35,13 @@ class SessionDetailsScreen : ComponentActivity() {
 
         val mode = intent.getStringExtra("mode") ?: "Unknown Mode"
         val date = intent.getStringExtra("date") ?: "Unknown Date"
-        val minTime = intent.getStringExtra("minTime") ?: "0 ms"
-        val meanTime = intent.getStringExtra("meanTime") ?: "0 ms"
-        val maxTime = intent.getStringExtra("maxTime") ?: "0 ms"
+        val minTime = intent.getStringExtra("minTime") ?: "0"
+        val meanTime = intent.getStringExtra("meanTime") ?: "0"
+        val maxTime = intent.getStringExtra("maxTime") ?: "0"
         val totalHits = intent.getStringExtra("totalHits") ?: "0"
+        val minForce = intent.getStringExtra("minForce") ?: "0"
+        val meanForce = intent.getStringExtra("meanForce") ?: "0"
+        val maxForce = intent.getStringExtra("maxForce") ?: "0"
 
         setContent {
             COEN390Theme {
@@ -48,7 +51,10 @@ class SessionDetailsScreen : ComponentActivity() {
                     minTime = minTime,
                     meanTime = meanTime,
                     maxTime = maxTime,
-                    totalHits = totalHits
+                    totalHits = totalHits,
+                    minForce = minForce,
+                    meanForce = meanForce,
+                    maxForce = maxForce
                 )
             }
         }
@@ -62,7 +68,10 @@ fun SessionDetails(
     minTime: String,
     meanTime: String,
     maxTime: String,
-    totalHits: String
+    totalHits: String,
+    minForce: String,
+    meanForce: String,
+    maxForce: String
 ) {
     val context = LocalContext.current
 
@@ -100,9 +109,12 @@ fun SessionDetails(
 
             DetailCard("Mode", mode)
             DetailCard("Date", date)
-            DetailCard("Min Reaction Time", minTime)
-            DetailCard("Mean Reaction Time", meanTime)
-            DetailCard("Max Reaction Time", maxTime)
+            DetailCard("Min Reaction Time", "$minTime ms")
+            DetailCard("Mean Reaction Time", "$meanTime ms")
+            DetailCard("Max Reaction Time", "$maxTime ms")
+            DetailCard("Min Force", minForce)
+            DetailCard("Mean Force", meanForce)
+            DetailCard("Max Force", maxForce)
             DetailCard("Total Hits", totalHits)
         }
     }

@@ -105,7 +105,7 @@ class ModeScreen : ComponentActivity() {
                     }
                     if (line.startsWith("<SUM")) {
                         val parts = line.replace("<", "").replace(">", "").split(",")
-                        if (parts.size >= 4) {
+                        if (parts.size >= 7) {
                             runOnUiThread {
                                 if (remainingAttempts.value < 1) {
                                     RTminVal.value = "${parts[1]} ms"
@@ -124,7 +124,7 @@ class ModeScreen : ComponentActivity() {
                                     val minHit = Hit(RTminVal.value, ForceminVal.value)
                                     val maxHit = Hit(RTmaxVal.value, ForcemaxVal.value)
                                     val meanHit = Hit(RTmeanVal.value, ForcemeanVal.value)
-                                    val session = Session(minHit, maxHit, meanHit, mode.value, date.value, totalHits.value)
+                                    val session = Session(maxHit, minHit, meanHit, mode.value, date.value, totalHits.value)
                                     db.insertSession(session)
 
                                     remainingAttempts.value = 0
@@ -139,6 +139,7 @@ class ModeScreen : ComponentActivity() {
         }.start()
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setupBluetoothConnection() // This will now start the listener too
@@ -169,6 +170,7 @@ class ModeScreen : ComponentActivity() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun setupBluetoothConnection() {
         Thread {
             try {
@@ -189,6 +191,7 @@ class ModeScreen : ComponentActivity() {
 
     private fun isConnected(): Boolean = bluetoothSocket?.isConnected == true
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun sendData(data: String) {
         Thread {
             try {
@@ -204,6 +207,7 @@ class ModeScreen : ComponentActivity() {
         }.start()
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun setupBluetoothConnectionSync() {
         try {
             val bluetoothAdapter = android.bluetooth.BluetoothAdapter.getDefaultAdapter()

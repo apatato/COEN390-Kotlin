@@ -38,26 +38,60 @@ class SessionDatabaseHelper(context: Context): SQLiteOpenHelper(context, DATABAS
         db.close()
     }
 
+    fun getAllSessions(): List<Session> {
+        val sessions = mutableListOf<Session>()
+        val db = readableDatabase
+        val query = "SELECT * FROM $TABLE_NAME ORDER BY $COLUMN_DATE DESC"
+        val cursor = db.rawQuery(query, null)
+
+        if (cursor.moveToFirst()) {
+            do {
+                val minTime = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_MIN_TIME))
+                val maxTime = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_MAX_TIME))
+                val meanTime = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_MEAN_TIME))
+
+                val minForce = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_MIN_FORCE))
+                val maxForce = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_MAX_FORCE))
+                val meanForce = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_MEAN_FORCE))
+
+                val mode = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_MODE))
+                val date = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DATE))
+                val totalHits = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TOTAL_HITS))
+
+                val minHit = Hit(time = minTime, force = minForce)
+                val maxHit = Hit(time = maxTime, force = maxForce)
+                val meanHit = Hit(time = meanTime, force = meanForce)
+
+                sessions.add(
+                    Session(
+                        max_hit = maxHit,
+                        min_hit = minHit,
+                        mean_hit = meanHit,
+                        mode = mode,
+                        date = date,
+                        total_hits = totalHits
+                    )
+                )
+            } while (cursor.moveToNext())
+        }
+
+        cursor.close()
+        db.close()
+        return sessions
+    }
+
     companion object{
         const val DATABASE_NAME = "sessions.db"
         const val DATABASE_VERSION = 1
         const val TABLE_NAME = "Sessions"
         const val COLUMN_MIN_TIME = "Min_Hit_Time"
-
         const val COLUMN_MAX_TIME = "Max_Hit_Time"
-
         const val COLUMN_MEAN_TIME = "Mean_Hit_Time"
-
         const val COLUMN_MIN_FORCE = "Min_Hit_Force"
-
         const val COLUMN_MAX_FORCE = "Max_Hit_Force"
-
         const val COLUMN_MEAN_FORCE = "Mean_Hit_Force"
-
         const val COLUMN_MODE = "Mode"
-
         const val COLUMN_DATE = "Date"
-
         const val COLUMN_TOTAL_HITS = "Total_Hits"
     }
 }
