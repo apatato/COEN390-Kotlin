@@ -26,6 +26,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material3.ExperimentalMaterial3Api
 import com.example.coen390.ui.theme.COEN390Theme
 
 class SessionDetailsScreen : ComponentActivity() {
@@ -35,32 +36,33 @@ class SessionDetailsScreen : ComponentActivity() {
 
         val mode = intent.getStringExtra("mode") ?: "Unknown Mode"
         val date = intent.getStringExtra("date") ?: "Unknown Date"
-        val minTime = intent.getStringExtra("minTime") ?: "0"
-        val meanTime = intent.getStringExtra("meanTime") ?: "0"
-        val maxTime = intent.getStringExtra("maxTime") ?: "0"
+        val minTime = intent.getFloatExtra("minTime", 0f)
+        val meanTime = intent.getFloatExtra("meanTime", 0f)
+        val maxTime = intent.getFloatExtra("maxTime", 0f)
         val totalHits = intent.getStringExtra("totalHits") ?: "0"
-        val minForce = intent.getStringExtra("minForce") ?: "0"
-        val meanForce = intent.getStringExtra("meanForce") ?: "0"
-        val maxForce = intent.getStringExtra("maxForce") ?: "0"
+        val minForce = intent.getFloatExtra("minForce", 0f)
+        val meanForce = intent.getFloatExtra("meanForce", 0f)
+        val maxForce = intent.getFloatExtra("maxForce", 0f)
 
         setContent {
             COEN390Theme {
                 SessionDetails(
                     mode = mode,
                     date = date,
-                    minTime = minTime,
-                    meanTime = meanTime,
-                    maxTime = maxTime,
+                    minTime = minTime.toString(),
+                    meanTime = meanTime.toString(),
+                    maxTime = maxTime.toString(),
                     totalHits = totalHits,
-                    minForce = minForce,
-                    meanForce = meanForce,
-                    maxForce = maxForce
+                    minForce = minForce.toString(),
+                    meanForce = meanForce.toString(),
+                    maxForce = maxForce.toString()
                 )
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SessionDetails(
     mode: String,
@@ -79,7 +81,7 @@ fun SessionDetails(
         topBar = {
             IconButton(
                 onClick = { (context as? ComponentActivity)?.finish() },
-                modifier = Modifier.padding(start = 8.dp, top = 25.dp)
+                modifier = Modifier.padding(start = 8.dp, top = 48.dp)
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_back),

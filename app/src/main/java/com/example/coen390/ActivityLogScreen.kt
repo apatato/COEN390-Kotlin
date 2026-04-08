@@ -55,14 +55,14 @@ class ActivityLogScreen : ComponentActivity() {
 fun ActivityLog(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val dbHelper = remember { SessionDatabaseHelper(context) }
-    val sessions = remember { dbHelper.getAllSessions() }
+    val sessions = dbHelper.getAllSessions()
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
             IconButton(
                 onClick = { (context as? ComponentActivity)?.finish() },
-                modifier = Modifier.padding(start = 8.dp, top = 50.dp)
+                modifier = Modifier.padding(start = 8.dp, top = 52.dp)
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_back),
@@ -100,7 +100,9 @@ fun ActivityLog(modifier: Modifier = Modifier) {
                 )
             } else {
                 LazyColumn(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(sessions) { session ->
