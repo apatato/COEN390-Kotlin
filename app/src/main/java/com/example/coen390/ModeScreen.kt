@@ -103,6 +103,7 @@ class ModeScreen : ComponentActivity() {
                             }
                         }
                     }
+
                     if (line.startsWith("<SUM")) {
                         val parts = line.replace("<", "").replace(">", "").split(",")
                         if (parts.size >= 7) {
