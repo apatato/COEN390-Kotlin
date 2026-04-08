@@ -36,26 +36,26 @@ class SessionDetailsScreen : ComponentActivity() {
 
         val mode = intent.getStringExtra("mode") ?: "Unknown Mode"
         val date = intent.getStringExtra("date") ?: "Unknown Date"
-        val minTime = intent.getFloatExtra("minTime", 0f)
-        val meanTime = intent.getFloatExtra("meanTime", 0f)
-        val maxTime = intent.getFloatExtra("maxTime", 0f)
+        val minTime = intent.getStringExtra("minTime") ?: "0 ms"
+        val meanTime = intent.getStringExtra("meanTime") ?: "0 ms"
+        val maxTime = intent.getStringExtra("maxTime") ?: "0 ms"
         val totalHits = intent.getStringExtra("totalHits") ?: "0"
-        val minForce = intent.getFloatExtra("minForce", 0f)
-        val meanForce = intent.getFloatExtra("meanForce", 0f)
-        val maxForce = intent.getFloatExtra("maxForce", 0f)
+        val minForce = intent.getStringExtra("minForce") ?: "0 N"
+        val meanForce = intent.getStringExtra("meanForce") ?: "0 N"
+        val maxForce = intent.getStringExtra("maxForce") ?: "0 N"
 
         setContent {
             COEN390Theme {
                 SessionDetails(
                     mode = mode,
                     date = date,
-                    minTime = minTime.toString(),
-                    meanTime = meanTime.toString(),
-                    maxTime = maxTime.toString(),
+                    minTime = minTime,
+                    meanTime = meanTime,
+                    maxTime = maxTime,
                     totalHits = totalHits,
-                    minForce = minForce.toString(),
-                    meanForce = meanForce.toString(),
-                    maxForce = maxForce.toString()
+                    minForce = minForce,
+                    meanForce = meanForce,
+                    maxForce = maxForce
                 )
             }
         }
@@ -111,9 +111,9 @@ fun SessionDetails(
 
             DetailCard("Mode", mode)
             DetailCard("Date", date)
-            DetailCard("Min Reaction Time", "$minTime ms")
-            DetailCard("Mean Reaction Time", "$meanTime ms")
-            DetailCard("Max Reaction Time", "$maxTime ms")
+            DetailCard("Min Reaction Time", minTime)
+            DetailCard("Mean Reaction Time", meanTime)
+            DetailCard("Max Reaction Time", maxTime)
             DetailCard("Min Force", minForce)
             DetailCard("Mean Force", meanForce)
             DetailCard("Max Force", maxForce)
