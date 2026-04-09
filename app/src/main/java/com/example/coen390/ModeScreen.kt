@@ -599,8 +599,7 @@ fun ModePreview() {
             remaining = 5,
             onStartClick = {},
             onStopClick = {},
-            High_Score = "0N",
-            Timer = "00:00"
+            High_Score = "0N"
         )
     }
 }
