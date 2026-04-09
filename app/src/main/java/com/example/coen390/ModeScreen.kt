@@ -82,6 +82,8 @@ class ModeScreen : ComponentActivity() {
     var mode = mutableStateOf("")
     var date = mutableStateOf("")
     var totalHits = mutableStateOf(0)
+    var timer = mutableStateOf("")
+
 
 
     // The listener must be called inside the connection setup
@@ -159,13 +161,17 @@ class ModeScreen : ComponentActivity() {
                     max = RTmaxVal.value + ", " + ForcemaxVal.value,
                     mean = RTmeanVal.value + ", " + ForcemeanVal.value,
                     remaining = remainingAttempts.value,
-                    onStartClick = {data ->
+                    onStartClick =
+                        {
+                            data ->
                         remainingAttempts.value = data.filter { it.isDigit() }.toIntOrNull() ?:0
                         totalHits.value = remainingAttempts.value
                         sendData(data)
                     },
                     onStopClick = {
-                        data -> sendData(data) }
+                        data -> sendData(data) },
+                    High_Score = ForcemaxVal.value,
+                    Timer = timer.value
                 )
             }
         }
@@ -233,6 +239,8 @@ fun Mode(
     , min: String
     , max: String
     , mean: String
+    , High_Score: String
+    , Timer: String
     , remaining: Int
     , onStartClick: (String) -> Unit
     , onStopClick: (String) -> Unit
@@ -293,118 +301,181 @@ fun Mode(
                 color = Color.Black
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            if (mode != "One Hit")
+            {
+                Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodyMedium,
-                lineHeight = 20.sp,
-                color = Color(0xFF1C1B1F),
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(36.dp))
-
-            Column(modifier = modifier.padding(vertical = 4.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Bottom
-                ) {
-                    Text(
-                        text = "Number of hits: ${sliderPosition.toInt()}",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 16.sp,
-                        color = Color(0xFF1C1B1F)
-                    )
-                    Text(
-                        text = "5-100",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF49454F),
-                        fontSize = 14.sp
-                    )
-                }
-                Spacer(modifier = Modifier.height(6.dp))
-                Box(
-                    modifier = Modifier.height(32.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Slider(
-                        value = sliderPosition,
-                        valueRange = 5f..100f,
-                        steps = 95,
-                        onValueChange = { sliderPosition = it },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = SliderDefaults.colors(
-                            thumbColor = Color.Transparent,
-                            activeTrackColor = Color(0xFFE0E0E0),
-                            inactiveTrackColor = Color(0xFFE0E0E0)
-                        ),
-                        thumb = {
-                            Box(
-                                modifier = Modifier
-                                    .size(16.dp)
-                                    .clip(CircleShape)
-                                    .background(Color(0xFF2C2C2C))
-                            )
-                        }
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(36.dp))
-
-            Button(
-                onClick = {
-                    onStartClick("A${sliderPosition.toInt()}")
-                    showPopup = true
-                          },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF2C2C2C)
-                )
-            ) {
                 Text(
-                    text = stringResource(id = R.string.start_activity),
-                    fontSize = 16.sp,
-                    color = Color.White,
-                    fontWeight = FontWeight.Medium
+                    text = description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    lineHeight = 20.sp,
+                    color = Color(0xFF1C1B1F),
+                    modifier = Modifier.fillMaxWidth()
                 )
+
+                Spacer(modifier = Modifier.height(36.dp))
+
+                Column(modifier = modifier.padding(vertical = 4.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.Bottom
+                    ) {
+                        Text(
+                            text = "Number of hits: ${sliderPosition.toInt()}",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 16.sp,
+                            color = Color(0xFF1C1B1F)
+                        )
+                        Text(
+                            text = "5-100",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFF49454F),
+                            fontSize = 14.sp
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Box(
+                        modifier = Modifier.height(32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Slider(
+                            value = sliderPosition,
+                            valueRange = 5f..100f,
+                            steps = 95,
+                            onValueChange = { sliderPosition = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = SliderDefaults.colors(
+                                thumbColor = Color.Transparent,
+                                activeTrackColor = Color(0xFFE0E0E0),
+                                inactiveTrackColor = Color(0xFFE0E0E0)
+                            ),
+                            thumb = {
+                                Box(
+                                    modifier = Modifier
+                                        .size(16.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(0xFF2C2C2C))
+                                )
+                            }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(36.dp))
+
+                Button(
+                    onClick = {
+                        onStartClick("A${sliderPosition.toInt()}")
+                        showPopup = true
+                              },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF2C2C2C)
+                    )
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.start_activity),
+                        fontSize = 16.sp,
+                        color = Color.White,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                Text(
+                    text = stringResource(id = R.string.overall_performance),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.align(Alignment.Start),
+                    color = Color.Black,
+                    fontSize = 22.sp
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                PerformanceRow(
+                    label = stringResource(id = R.string.min_label),
+                    value = min
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                PerformanceRow(
+                    label = stringResource(id = R.string.mean_label),
+                    value = mean
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                PerformanceRow(
+                    label = stringResource(id = R.string.max_label),
+                    value = max
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            else
+            {
+                Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                text = stringResource(id = R.string.overall_performance),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.align(Alignment.Start),
-                color = Color.Black,
-                fontSize = 22.sp
-            )
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    lineHeight = 20.sp,
+                    color = Color(0xFF1C1B1F),
+                    modifier = Modifier.fillMaxWidth()
+                )
 
-            Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(36.dp))
 
-            PerformanceRow(
-                label = stringResource(id = R.string.min_label),
-                value = min
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            PerformanceRow(
-                label = stringResource(id = R.string.mean_label),
-                value = mean
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            PerformanceRow(
-                label = stringResource(id = R.string.max_label),
-                value = max
-            )
 
-            Spacer(modifier = Modifier.height(24.dp))
+
+                Spacer(modifier = Modifier.height(36.dp))
+
+                Button(
+                    onClick = {
+                        onStartClick("A${sliderPosition.toInt()}")
+                        showPopup = true
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF2C2C2C)
+                    )
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.start_activity),
+                        fontSize = 16.sp,
+                        color = Color.White,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                Text(
+                    text = stringResource(id = R.string.overall_performance),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.align(Alignment.Start),
+                    color = Color.Black,
+                    fontSize = 22.sp
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                PerformanceRow(
+                    label = stringResource(id = R.string.High_Score),
+                    value = High_Score
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+            }
         }
     }
 }
@@ -518,7 +589,9 @@ fun ModePreview() {
             mean = "0ms, 0N",
             remaining = 5,
             onStartClick = {},
-            onStopClick = {}
+            onStopClick = {},
+            High_Score = "0N",
+            Timer = "00:00"
         )
     }
 }
