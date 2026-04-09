@@ -226,16 +226,23 @@ class WelcomeScreen : ComponentActivity() {
                 Spacer(modifier = Modifier.height(24.dp))
 
                 ModeCard(
-                    title = "Endless",
-                    description = "Practice activity will run until you stop it"
+                    title = "One Hit",
+                    description = "One big hit that will give the force of that hit",
+                    onClick = { val mode = Intent(context, ModeScreen::class.java)
+
+                                mode.putExtra("mode", "One Hit")
+                                mode.putExtra("description", "This mode asks the user to hit a randomly selected pad one time as hard as they possibly can and it will hold your strongest punch.")
+
+                                context.startActivity(mode) }
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
 
-                ModeCard(
-                    title = "Timed",
-                    description = "Practice for a set amount of time"
-                )
+//                Spacer(modifier = Modifier.height(24.dp))
+//
+//                ModeCard(
+//                    title = "Timed",
+//                    description = "Practice for a set amount of time"
+//                )
             }
         }
     }
