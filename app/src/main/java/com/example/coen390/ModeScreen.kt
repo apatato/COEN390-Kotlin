@@ -298,8 +298,7 @@ fun Mode(
                 color = Color.Black
             )
 
-            if (mode != "One Hit")
-            {
+
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
@@ -364,12 +363,15 @@ fun Mode(
                 sliderPosition = 1f
             }
 
-
                 Spacer(modifier = Modifier.height(36.dp))
 
                 Button(
                     onClick = {
-                        onStartClick("A${sliderPosition.toInt()}")
+                        if(mode == "random") {
+                            onStartClick("A${sliderPosition.toInt()}")
+                        } else {
+                            onStartClick("B${sliderPosition.toInt()}")
+                        }
                         showPopup = true
                               },
                     modifier = Modifier
@@ -418,72 +420,9 @@ fun Mode(
                 )
             } else {
                 PerformanceRow(
-                    label = stringResource(id = R.string.max_label),
-                    value = max
-                )
-            }
-
-                Spacer(modifier = Modifier.height(24.dp))
-            }
-
-            else
-            {
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    lineHeight = 20.sp,
-                    color = Color(0xFF1C1B1F),
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(36.dp))
-
-
-
-                Spacer(modifier = Modifier.height(36.dp))
-
-                Button(
-                    onClick = {
-                        onStartClick("A${sliderPosition.toInt()}")
-                        showPopup = true
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF2C2C2C)
-                    )
-                ) {
-                    Text(
-                        text = stringResource(id = R.string.start_activity),
-                        fontSize = 16.sp,
-                        color = Color.White,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(32.dp))
-
-                Text(
-                    text = stringResource(id = R.string.overall_performance),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.align(Alignment.Start),
-                    color = Color.Black,
-                    fontSize = 22.sp
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                PerformanceRow(
                     label = stringResource(id = R.string.High_Score),
                     value = High_Score
                 )
-
-                Spacer(modifier = Modifier.height(24.dp))
             }
         }
     }
