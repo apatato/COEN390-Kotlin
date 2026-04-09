@@ -210,12 +210,12 @@ class WelcomeScreen : ComponentActivity() {
 
                 ModeCard(
                     title = "Random",
-                    description = "Practice with a randomly generated pattern",
+                    description = "Punch a randomly generated pattern",
                     onClick = {
                         val mode = Intent(context, ModeScreen::class.java)
 
                         mode.putExtra("mode", "Random")
-                        mode.putExtra("description", "This mode will generate a random pattern for you to strike. You may specify the duration of the activity, etc.")
+                        mode.putExtra("description", "This mode will light up the pads in a random pattern for you to strike. You may specify how many punches you would like to throw during the session.")
 
 
                         context.startActivity(mode)
@@ -227,11 +227,11 @@ class WelcomeScreen : ComponentActivity() {
 
                 ModeCard(
                     title = "One Hit",
-                    description = "One big hit that will give the force of that hit",
+                    description = "One big hit that will give the max force of that punch",
                     onClick = { val mode = Intent(context, ModeScreen::class.java)
 
                                 mode.putExtra("mode", "One Hit")
-                                mode.putExtra("description", "This mode asks the user to hit a randomly selected pad one time as hard as they possibly can and it will record your strongest punch.")
+                                mode.putExtra("description", "This mode asks the user to hit a randomly selected pad one time as hard as they possibly can and it will record the force of that punch.")
 
                                 context.startActivity(mode) }
                 )

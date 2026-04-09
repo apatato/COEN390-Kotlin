@@ -40,6 +40,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -72,18 +73,16 @@ class ModeScreen : ComponentActivity() {
     private var bluetoothSocket: BluetoothSocket? = null
     private var outputStream: OutputStream? = null
 
-    var RTminVal = mutableStateOf("0 ms")
-    var RTmaxVal = mutableStateOf("0 ms")
-    var RTmeanVal = mutableStateOf("0 ms")
-    var ForcemeanVal = mutableStateOf("0 N")
-    var ForcemaxVal = mutableStateOf("0 N")
-    var ForceminVal = mutableStateOf("0 N")
-    var remainingAttempts = mutableStateOf(0)
+    var RTminVal = mutableStateOf("X ms")
+    var RTmaxVal = mutableStateOf("X ms")
+    var RTmeanVal = mutableStateOf("X ms")
+    var ForcemeanVal = mutableStateOf("X N")
+    var ForcemaxVal = mutableStateOf("X N")
+    var ForceminVal = mutableStateOf("X N")
+    var remainingAttempts = mutableIntStateOf(0)
     var mode = mutableStateOf("")
     var date = mutableStateOf("")
-    var totalHits = mutableStateOf(0)
-    var timer = mutableStateOf("")
-
+    var totalHits = mutableIntStateOf(0)
 
 
     // The listener must be called inside the connection setup
@@ -170,8 +169,7 @@ class ModeScreen : ComponentActivity() {
                     },
                     onStopClick = {
                         data -> sendData(data) },
-                    High_Score = ForcemaxVal.value,
-                    Timer = timer.value
+                    High_Score = ForcemaxVal.value
                 )
             }
         }
@@ -240,7 +238,6 @@ fun Mode(
     , max: String
     , mean: String
     , High_Score: String
-    , Timer: String
     , remaining: Int
     , onStartClick: (String) -> Unit
     , onStopClick: (String) -> Unit
@@ -315,6 +312,7 @@ fun Mode(
 
                 Spacer(modifier = Modifier.height(36.dp))
 
+            if (mode == "random") {
                 Column(modifier = modifier.padding(vertical = 4.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -362,6 +360,10 @@ fun Mode(
                         )
                     }
                 }
+            } else {
+                sliderPosition = 1f
+            }
+
 
                 Spacer(modifier = Modifier.height(36.dp))
 
@@ -399,6 +401,7 @@ fun Mode(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
+            if(mode == "random") {
                 PerformanceRow(
                     label = stringResource(id = R.string.min_label),
                     value = min
@@ -413,6 +416,12 @@ fun Mode(
                     label = stringResource(id = R.string.max_label),
                     value = max
                 )
+            } else {
+                PerformanceRow(
+                    label = stringResource(id = R.string.max_label),
+                    value = max
+                )
+            }
 
                 Spacer(modifier = Modifier.height(24.dp))
             }
@@ -584,9 +593,9 @@ fun ModePreview() {
         Mode(
             mode = stringResource(id = R.string.mode_name_title),
             description = stringResource(id = R.string.mode_detailed_description),
-            min = "0ms, 0N",
-            max = "0ms, 0N",
-            mean = "0ms, 0N",
+            min = "Xms, XN",
+            max = "Xms, XN",
+            mean = "Xms, XN",
             remaining = 5,
             onStartClick = {},
             onStopClick = {},
