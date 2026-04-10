@@ -210,12 +210,12 @@ class WelcomeScreen : ComponentActivity() {
 
                 ModeCard(
                     title = "Random",
-                    description = "Punch a randomly generated pattern",
+                    description = "Strike targets in a randomly generated pattern",
                     onClick = {
                         val mode = Intent(context, ModeScreen::class.java)
 
                         mode.putExtra("mode", "Random")
-                        mode.putExtra("description", "This mode will light up the pads in a random pattern for you to strike. You may specify how many punches you would like to throw during the session.")
+                        mode.putExtra("description", "This mode will light up the pads in a random pattern for you to hit. You may specify how many strikes you would like to throw during the session.")
 
 
                         context.startActivity(mode)
