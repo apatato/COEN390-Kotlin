@@ -258,7 +258,10 @@ fun Mode(
     if (showPopup) {
         AttemptsPopup(
             attempts = remaining,
-            onDismiss = { showPopup = false },
+            onDismiss = {
+                onStartClick("S") //ESP32 will stop
+                showPopup = false
+            },
             onStopClick = {
                 onStartClick("S") //ESP32 will stop
                 showPopup = false
