@@ -113,9 +113,9 @@ class ModeScreen : ComponentActivity() {
                                     RTminVal.value = "${parts[1]} ms"
                                     RTmaxVal.value = "${parts[2]} ms"
                                     RTmeanVal.value = "${parts[3]} ms"
-                                    ForcemeanVal.value = "${parts[4]} N"
+                                    ForceminVal.value = "${parts[4]} N"
                                     ForcemaxVal.value = "${parts[5]} N"
-                                    ForceminVal.value = "${parts[6]} N"
+                                    ForcemeanVal.value = "${parts[6]} N"
 
                                     var now = LocalDateTime.now()
                                     val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
@@ -514,8 +514,8 @@ fun AttemptsPopup(
                 )
                 Spacer(modifier = Modifier.height(48.dp))
                 Button(
-                    onClick = { onStopClick() //send stop signal
-                              },
+                    onClick =
+                        { onStopClick() }, //send stop signal to ESP32
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
