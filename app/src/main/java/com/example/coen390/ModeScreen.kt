@@ -123,6 +123,14 @@ class ModeScreen : ComponentActivity() {
 
                                     db = SessionDatabaseHelper(this)
 
+                                    if(mode.value == "One Hit"){
+                                        RTminVal.value = "N/A"
+                                        RTmaxVal.value = "N/A"
+                                        RTmeanVal.value = "N/A"
+                                        ForcemeanVal.value = "N/A"
+                                        ForceminVal.value = "N/A"
+                                    }
+
                                     val minHit = Hit(RTminVal.value, ForceminVal.value)
                                     val maxHit = Hit(RTmaxVal.value, ForcemaxVal.value)
                                     val meanHit = Hit(RTmeanVal.value, ForcemeanVal.value)
