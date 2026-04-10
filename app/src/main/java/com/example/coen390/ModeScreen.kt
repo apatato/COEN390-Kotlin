@@ -311,7 +311,7 @@ fun Mode(
 
                 Spacer(modifier = Modifier.height(36.dp))
 
-            if (mode == "random") {
+            if (mode == "Random") {
                 Column(modifier = modifier.padding(vertical = 4.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -367,7 +367,7 @@ fun Mode(
 
                 Button(
                     onClick = {
-                        if(mode == "random") {
+                        if(mode == "Random") {
                             onStartClick("A${sliderPosition.toInt()}")
                         } else {
                             onStartClick("B${sliderPosition.toInt()}")
@@ -403,7 +403,7 @@ fun Mode(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-            if(mode == "random") {
+            if(mode == "Random") {
                 PerformanceRow(
                     label = stringResource(id = R.string.min_label),
                     value = min
