@@ -227,11 +227,11 @@ class WelcomeScreen : ComponentActivity() {
 
                 ModeCard(
                     title = "One Hit",
-                    description = "One big hit that will give the max force of that punch",
+                    description = "One big hit that will give the max force of that strike",
                     onClick = { val mode = Intent(context, ModeScreen::class.java)
 
                                 mode.putExtra("mode", "One Hit")
-                                mode.putExtra("description", "This mode asks the user to hit a randomly selected pad one time as hard as they possibly can and it will record the force of that punch.")
+                                mode.putExtra("description", "This mode asks the user to hit a selected pad one time as hard as they possibly can and it will record the force of that strike.")
 
                                 context.startActivity(mode) }
                 )
